@@ -4,24 +4,64 @@ var gGame = {
     isOn: false,
     shownCount: 0,
     markedCount: 0,
-    secsPassed: 0
+    secsPassed: 0,
+    lives: 3,
+    isHint: false
 }
+var gLevel = {
+    size: 4,
+    mines: 2
+};
 var gGameInterval;
 var gStartTime;
+var gMineTimeout;
+var gHintTimeout;
+var gHintIdx;
+var gMessageTimeout;
+var gLooseSound = new Audio("./audio/loose.wav");
+var gVicSound = new Audio("./audio/victory.wav");
+
 function initGame() {
-    gGame.isOn = true;
-    gGame.shownCount = 0;
-    gGame.markedCount = 0;
-    gGame.secsPassed = 0;
+    zeroingElements();
+    var elLevels = document.getElementById('levels')
+    var arrayName = elLevels.options[elLevels.selectedIndex].text;
+    if (arrayName === 'Easy') {
+        gLevel.size = 4;
+        gLevel.mines = 2;
+    } else if (arrayName === 'Hard') {
+        gLevel.size = 8;
+        gLevel.mines = 12;
+    } else if (arrayName === 'Extremley Hard') {
+        gLevel.size = 12;
+        gLevel.mines = 30;
+    }
     buildBoard();
     renderMat(gBoard);
     console.log(gBoard);
 }
 
+function zeroingElements() {
+    clearInterval(gGameInterval);
+    gGame.isOn = true;
+    var elTimer = document.querySelector('.timer');
+    elTimer.innerHTML = 'Game Time: 0 seconds';
+    gGame.shownCount = 0;
+    gGame.markedCount = 0;
+    gGame.secsPassed = 0;
+    gGame.lives = 3;
+    document.querySelector('button').innerHTML = '&#128522';
+    var elLives = document.querySelector('.lives span');
+    elLives.innerHTML = gGame.lives;
+    for (var i = 1; i < 4; i++) {
+        var elHint = document.querySelector(`.hints.n${i}`);
+        elHint.style.visibility = 'visible';
+    }
+}
+
 function buildBoard() {
-    gBoard = createMat(4, 4);
-    placeMines(gBoard, 2);
-    setMinesNegsCount(gBoard);
+    gBoard = createMat(gLevel.size, gLevel.size);
+    // placeMines(gBoard, gLevel.mines);
+    // setMinesNegsCount(gBoard);
     return gBoard;
 }
 function placeOneMine(board) {
@@ -32,24 +72,21 @@ function placeOneMine(board) {
 }
 
 function placeMines(board, numOfMines) {
-    board[0][0].isMine = true;
-    board[2][2].isMine = true;
-    // for (var i = 0; i < numOfMines; i++) {
-    //     placeOneMine(board);
-    // }
+    for (var i = 0; i < numOfMines; i++) {
+        placeOneMine(board);
+    }
 }
 
 
 
 function negsMineCount(cellI, cellJ, board) {
-    debugger;
     var negsCount = 0;
     for (var i = cellI - 1; i <= cellI + 1; i++) {
         if (i < 0 || i >= board.length) continue
         for (var j = cellJ - 1; j <= cellJ + 1; j++) {
             if (j < 0 || j >= board.length) continue
             if (i === cellI && j === cellJ) continue
-            if (board[i][j].isMine === true) {
+            if (board[i][j].isMine) {
                 negsCount++;
             }
         }
@@ -66,86 +103,180 @@ function setMinesNegsCount(board) {
     }
 }
 
-
-function cellClicked(elBtn, cellI, cellJ) {
-    if (gGame.shownCount === 0) {
-        gStartTime = Date.now();
-        gGameInterval = setInterval(updateCurrTime, 1000);
+function cellClicked(cellI, cellJ) {
+    if (!gGame.isOn) return;
+    clearTimeout(gHintTimeout);
+    clearTimeout(gMessageTimeout);
+    var elCell = document.querySelector(`#cell-${cellI}-${cellJ}`);
+    if (gGame.isHint) {
+        var elHint = document.querySelector(`.hints.${gHintIdx}`);
+        elHint.style.visibility = 'hidden';
+        elHint.style.color = 'white';
+        seeHint(cellI, cellJ);
+        return;
     }
-    var e = window.event;
-    if (e.button === 0) {
-        var elCell = document.querySelector(`#cell-${cellI}-${cellJ}`);
-        while (gBoard[cellI][cellJ].isShown === false) {
-            if (gBoard[cellI][cellJ].isMine === true) {
-                elCell.innerText = 'Mine';
+    while (gBoard[cellI][cellJ].isShown === false) {
+        if (gBoard[cellI][cellJ].isMarked) return;
+        if (gBoard[cellI][cellJ].isMine) {
+            elCell.innerHTML = '&#128163';
+            // gBoard[cellI][cellJ].isShown = true;
+            gMineTimeout = setTimeout(disapearMine, 500, cellI, cellJ)
+            gGame.lives--;
+            var elLives = document.querySelector('.lives span');
+            elLives.innerHTML = gGame.lives;
+            checkGameLost();
+            return;
+        }
+        else {
+            if (gGame.shownCount === 0) {
+                gStartTime = Date.now();
+                gGameInterval = setInterval(updateCurrTime, 1000);
                 gBoard[cellI][cellJ].isShown = true;
-                gameLost();
-                return;
+                placeMines(gBoard, gLevel.mines);
+                setMinesNegsCount(gBoard);
             }
-            else {
-                elCell.innerText = gBoard[cellI][cellJ].minesAroundCount;
-                gBoard[cellI][cellJ].isShown = true;
-                gGame.shownCount++;
-                if (gBoard[cellI][cellJ].minesAroundCount === 0) {
-                    expandShown(gBoard, cellI, cellJ);
+            gBoard[cellI][cellJ].isShown = true;
+            elCell.innerHTML = gBoard[cellI][cellJ].minesAroundCount;
+            gGame.shownCount++;
+            if (gBoard[cellI][cellJ].minesAroundCount === 0) {
+                expandShown(gBoard, cellI, cellJ);
+            }
+        }
+    }
+    checkGameOver();
+    console.log(gGame.shownCount + gGame.markedCount);
+    clearTimeout(gMineTimeout);
+}
+
+function checkGameLost() {
+    if (gGame.lives === 0) {
+        gLooseSound.play();
+        clearTimeout(gMineTimeout);
+        document.querySelector('button').innerHTML = '&#128557 You Lost!';
+        for (var i = 0; i < gBoard.length; i++) {
+            for (var j = 0; j < gBoard.length; j++) {
+                var currCell = gBoard[i][j];
+                if (currCell.isMine) {
+                    var elCell = document.querySelector(`#cell-${i}-${j}`);
+                    elCell.innerHTML = '&#128163';
                 }
             }
         }
-        checkGameOver();
-    } else if (e.button === 2) {
-        console.log("U pressed right");
+        clearInterval(gGameInterval);
+        gGame.isOn = false;
     }
-}
-function gameLost() {
-    document.querySelector('button').innerHTML = '&#128557';
 }
 
 function checkGameOver() {
-    if (gGame.shownCount === (gBoard.length ** 2) - 2) {
+    if (gGame.shownCount + gGame.markedCount === gBoard.length ** 2) {
+        gVicSound.play();
         document.querySelector('button').innerHTML = '&#128526 You won!';
+        clearInterval(gGameInterval);
+        gGame.isOn = false;
     }
 }
 
 function expandShown(board, cellI, cellJ) {
-    debugger;
     var negs = getNegs(cellI, cellJ, board);
     for (var i = 0; i < negs.length; i++) {
-        if (negs[i].isMine === false) {
-            var currCell = negs[i]
+        var currCell = negs[i];
+        if (gBoard[currCell.i][currCell.j].isMine === false) {
             var elNeg = document.querySelector(`#cell-${currCell.i}-${currCell.j}`)
-            elNeg.innerText = gBoard[currCell.i][currCell.j].minesAroundCount;
-            gBoard[currCell.i][currCell.j].isShown = true;
-            gGame.shownCount++;
+            elNeg.innerHTML = gBoard[currCell.i][currCell.j].minesAroundCount;
+            if (gBoard[currCell.i][currCell.j].isShown === false) {
+                gBoard[currCell.i][currCell.j].isShown = true;
+                gGame.shownCount++;
+            }
         }
     }
-    renderMat(gBoard);
 }
 
 function updateCurrTime() {
-    var currTime = (Date.now() - gStartTime) / 1000;
+    var currTime = Math.floor((Date.now() - gStartTime) / 1000);
     gGame.secsPassed = 'Game Time: ' + currTime + ' seconds';
     var elTimer = document.querySelector('.timer');
-    elTimer.innerText = gGame.secsPassed;
-    elTimer.style.display = 'block';
+    elTimer.innerHTML = gGame.secsPassed;
     return gGame.secsPassed;
 }
 
-// document.oncontextmenu = function (e) {
-//     var evt = new Object({ keyCode: 93 });
-//     stopEvent(e);
-// }
-// function stopEvent(event) {
-//     if (event.preventDefault != undefined)
-//         event.preventDefault();
-//     if (event.stopPropagation != undefined)
-//         event.stopPropagation();
-// }
-// var gCell ={
-//     minesAroundCount: 0,
-//     isShown: true,
-//     isMine: false,
-//     isMarked: true
-// }
+
+
+function cellMarked(cellI, cellJ) {
+    //Prevents the browser from opening right-click menu
+    var el = document.querySelector('table');
+    el.addEventListener('contextmenu', function (ev) {
+        ev.preventDefault();
+        return false;
+    }, false);
+    // The function which is used isntead of right-click
+    if (!gGame.isOn) return false;
+    var elCell = document.querySelector(`#cell-${cellI}-${cellJ}`);
+    if (!gBoard[cellI][cellJ].isMarked) {
+        gBoard[cellI][cellJ].isMarked = true;
+        elCell.innerHTML = '&#128681';
+        gGame.markedCount++;
+    } else {
+        gBoard[cellI][cellJ].isMarked = false;
+        elCell.innerHTML = '';
+        gGame.markedCount--;
+    }
+    checkGameOver();
+    return false;
+}
+
+function disapearMine(cellI, cellJ) {
+    var elCell = document.querySelector(`#cell-${cellI}-${cellJ}`);
+    elCell.innerHTML = '';
+}
+
+function seeHint(cellI, cellJ) {
+    var negs = getNegs(cellI, cellJ, gBoard);
+    negs.push({ i: cellI, j: cellJ });
+    for (var i = 0; i < negs.length; i++) {
+        var currCell = negs[i];
+        var elNeg = document.querySelector(`#cell-${currCell.i}-${currCell.j}`)
+        if (gBoard[currCell.i][currCell.j].isMine === false) {
+            elNeg.innerHTML = gBoard[currCell.i][currCell.j].minesAroundCount;
+        } else {
+            elNeg.innerHTML = '&#128163';
+        }
+    }
+    gGame.isHint = false;
+    gHintTimeout = setTimeout(clearHint, 1000, cellI, cellJ);
+}
+
+function clearHint(cellI, cellJ) {
+    var negs = getNegs(cellI, cellJ, gBoard);
+    negs.push({ i: cellI, j: cellJ });
+    for (var i = 0; i < negs.length; i++) {
+        var currCell = negs[i];
+        var elNeg = document.querySelector(`#cell-${currCell.i}-${currCell.j}`)
+        if (!gBoard[currCell.i][currCell.j].isShown)
+            elNeg.innerHTML = '';
+    }
+}
+
+function turnOnHint(idx) {
+    if (gGame.shownCount === 0){
+        var elMessage = document.querySelector(`.message`);
+        elMessage.innerHTML = 'Can\'t show hint before first click!';
+        elMessage.style.visibility = 'visible';
+        gMessageTimeout = setTimeout(turnOfmassage,1800);
+    } else {
+        gGame.isHint = true;
+        var elHint = document.querySelector(`.hints.${idx}`);
+        elHint.style.color = 'yellow';
+        gHintIdx = idx;
+    }
+}
+
+function turnOfmassage(){
+    var elMessage = document.querySelector(`.message`);
+    elMessage.style.visibility = 'hidden';
+}
+
+
+
 
 
 

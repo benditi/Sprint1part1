@@ -1,13 +1,17 @@
 * {
     box-sizing: border-box;
 }
+
+body{
+    background-color:#bdcebe;
+}
 button{
     width: 40px;
     height: 40px;
     background-color: lightseagreen;
     display:block;
     position: absolute;
-    top:10px;
+    top:30px;
     right: 10px;
     padding: 5px;
     width: 300px;
@@ -19,30 +23,88 @@ table {
     background-color:blue;
 }
 .board td {
-    width: 50px;
-    height: 50px;
+    width: 37px;
+    height: 37px;
     text-align: center;
     /* transition: background-color 0.5s; */
     padding: 10px;
+    font-size:x-small;
+    font-weight: bolder;
 }
 
 .blank {
-    background-color:gray;
+    background-color:#ada397;
 }
-
+.selector {
+    position: absolute;
+    bottom: 80px;
+    left: 550px;
+    font-size:large;
+    align-self: center;
+}
 .timer {
     height: 60px;
     width: 180px;
-    background-color: darkcyan;
-    display: none;
-    margin-left: auto;
-    margin-right: auto;
+    background-color:#eca1a6;
     padding: 10px;
-    box-sizing: border-box;
     border: 2px solid grey;
     border-radius: 7px;
     text-align: center;
     font-size: larger;
-    margin-top: 10px;
-    margin-bottom: 15px;
+    /* margin-top: 10px;
+    margin-bottom: 15px; */
+    position: absolute;
+    top: 100px;
+    right: 50px;
+}
+
+.footer{
+    position: absolute;
+    bottom: 50px;
+    left: 600px;
+    font-weight: bolder;
+    font-style: italic;
+}
+
+.lives{
+    height: 60px;
+    width: 180px;
+    background-color:#b9936c;
+    padding: 10px;
+    border: 2px solid grey;
+    border-radius: 7px;
+    text-align: center;
+    font-size: larger;
+    font-weight: bolder;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    color: red;
+    position: absolute;
+    bottom: 400px;
+    left: 50px;
+}
+
+.hints{
+    font-size: 80px;
+    width: 80px;
+    color:white; 
+    position: absolute;
+}
+.hints.n1{
+    bottom: 150px;
+    left: 50px;
+}
+.hints.n2{
+    bottom: 150px;
+    left: 150px;
+}
+.hints.n3{
+    bottom: 150px;
+    left: 250px;
+}
+.message{
+    visibility: hidden;
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+    font-size: 20px;
 }

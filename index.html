@@ -1,16 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Mines Sweeper</title>
     <link rel="stylesheet" href="./css/main.css">
 </head>
 <body onload="initGame()">
-    <button onclick="init()">&#128522</button>
+    <button onclick="initGame()">&#128522</button>
     <table border="1" cellpadding="10">
         <tbody class="board">
         </tbody>
     </table>
-    <div class="timer">Game Time: 0.000 seconds</div>
+    <div class="selector">
+        <label for="levels">Choose a level:</label>
+        <select name="levels" id="levels" onchange="initGame()">
+            <option value="Easy">Easy</option>
+            <option value="Hard">Hard</option>
+            <option value="Extremley">Extremley Hard</option>
+        </select>
+    </div>
+    <div class="timer"></div>
+    <div class="footer">David Ben Ishai</div>
+    <div class="lives"><span></span> lives left</div>
+    <div class="hints n1" onclick="turnOnHint('n1')">&#x2605</div>
+    <div class="hints n2" onclick="turnOnHint('n2')">&#x2605</div>
+    <div class="hints n3" onclick="turnOnHint('n3')">&#x2605</div>
+    <div class="message">Hints</div>
     <script src="./js/utils.js"></script>
     <script src="./js/main.js"></script>
 </body>
