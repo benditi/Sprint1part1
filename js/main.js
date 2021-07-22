@@ -60,8 +60,6 @@ function zeroingElements() {
 
 function buildBoard() {
     gBoard = createMat(gLevel.size, gLevel.size);
-    // placeMines(gBoard, gLevel.mines);
-    // setMinesNegsCount(gBoard);
     return gBoard;
 }
 function placeOneMine(board) {
@@ -76,7 +74,6 @@ function placeMines(board, numOfMines) {
         placeOneMine(board);
     }
 }
-
 
 
 function negsMineCount(cellI, cellJ, board) {
@@ -119,7 +116,6 @@ function cellClicked(cellI, cellJ) {
         if (gBoard[cellI][cellJ].isMarked) return;
         if (gBoard[cellI][cellJ].isMine) {
             elCell.innerHTML = '&#128163';
-            // gBoard[cellI][cellJ].isShown = true;
             gMineTimeout = setTimeout(disapearMine, 500, cellI, cellJ)
             gGame.lives--;
             var elLives = document.querySelector('.lives span');
@@ -137,6 +133,7 @@ function cellClicked(cellI, cellJ) {
             }
             gBoard[cellI][cellJ].isShown = true;
             elCell.innerHTML = gBoard[cellI][cellJ].minesAroundCount;
+            // elCell.classList.add('noshade');
             gGame.shownCount++;
             if (gBoard[cellI][cellJ].minesAroundCount === 0) {
                 expandShown(gBoard, cellI, cellJ);
@@ -198,8 +195,6 @@ function updateCurrTime() {
     elTimer.innerHTML = gGame.secsPassed;
     return gGame.secsPassed;
 }
-
-
 
 function cellMarked(cellI, cellJ) {
     //Prevents the browser from opening right-click menu
@@ -274,9 +269,6 @@ function turnOfmassage(){
     var elMessage = document.querySelector(`.message`);
     elMessage.style.visibility = 'hidden';
 }
-
-
-
 
 
 

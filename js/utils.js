@@ -59,7 +59,7 @@ function getNegs(cellI, cellJ, board) {
 }
 
 function isEmptyCell(coord) {
-    return gBoard[coord.i][coord.j] === ''
+    return gBoard[coord.i][coord.j] === '';
 }
 
 function createMat(rowsIdx, colsIdx){

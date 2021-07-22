@@ -20,21 +20,18 @@ table {
     margin: 20px;
     margin-left: auto;
     margin-right: auto;
-    background-color:blue;
+    background-color:black;
 }
 .board td {
     width: 37px;
     height: 37px;
     text-align: center;
-    /* transition: background-color 0.5s; */
     padding: 10px;
     font-size:x-small;
     font-weight: bolder;
+    background-color: gray;
 }
 
-.blank {
-    background-color:#ada397;
-}
 .selector {
     position: absolute;
     bottom: 80px;
@@ -51,8 +48,6 @@ table {
     border-radius: 7px;
     text-align: center;
     font-size: larger;
-    /* margin-top: 10px;
-    margin-bottom: 15px; */
     position: absolute;
     top: 100px;
     right: 50px;
@@ -88,17 +83,15 @@ table {
     width: 80px;
     color:white; 
     position: absolute;
+    bottom: 150px;
 }
 .hints.n1{
-    bottom: 150px;
     left: 50px;
 }
 .hints.n2{
-    bottom: 150px;
     left: 150px;
 }
 .hints.n3{
-    bottom: 150px;
     left: 250px;
 }
 .message{
